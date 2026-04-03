@@ -33,6 +33,39 @@ export default function SellPage() {
 
   const models = make ? carMakes[make] || [] : [];
 
+  const handleAiAnalysis = (analysis: { make?: string; model?: string; year_estimate?: string; color?: string; body_type?: string; dashboard_reading?: string | null }) => {
+    if (analysis.make && Object.keys(carMakes).includes(analysis.make)) {
+      setMake(analysis.make);
+      if (analysis.model && carMakes[analysis.make]?.includes(analysis.model)) {
+        setModel(analysis.model);
+      }
+    }
+    if (analysis.year_estimate) {
+      // Extract first 4-digit year from estimate
+      const yearMatch = analysis.year_estimate.match(/\d{4}/);
+      if (yearMatch) setYear(yearMatch[0]);
+    }
+    if (analysis.color && colors.includes(analysis.color)) {
+      setColor(analysis.color);
+    }
+    if (analysis.body_type && bodyTypes.includes(analysis.body_type)) {
+      setBodyType(analysis.body_type);
+    }
+    if (analysis.dashboard_reading) {
+      // Try to extract km value
+      const reading = analysis.dashboard_reading.toLowerCase();
+      const numMatch = reading.match(/[\d,]+/);
+      if (numMatch) {
+        let km = parseInt(numMatch[0].replace(/,/g, ""));
+        // If it mentions miles, convert to km
+        if (reading.includes("mile") || reading.includes("mph")) {
+          km = Math.round(km * 1.609);
+        }
+        setMileage(km.toString());
+      }
+    }
+  };
+
   const inputClass = "w-full rounded-lg border border-border bg-input px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring";
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -107,6 +140,12 @@ export default function SellPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Photos — FIRST so AI can auto-fill */}
+            <div className="rounded-xl border border-border bg-card p-6">
+              <h2 className="font-bold text-lg text-foreground mb-5">📸 {t("sell.photos")}</h2>
+              <PhotoUpload images={photos} onChange={setPhotos} onAnalysis={handleAiAnalysis} maxPhotos={20} />
+            </div>
+
             {/* Vehicle Info */}
             <div className="rounded-xl border border-border bg-card p-6">
               <h2 className="font-bold text-lg text-foreground mb-5">🚗 {t("sell.vehicleInfo")}</h2>
@@ -195,12 +234,6 @@ export default function SellPage() {
                 onChange={(e) => setDescription(e.target.value)}
                 className={`${inputClass} resize-none`}
               />
-            </div>
-
-            {/* Photos */}
-            <div className="rounded-xl border border-border bg-card p-6">
-              <h2 className="font-bold text-lg text-foreground mb-5">📸 {t("sell.photos")}</h2>
-              <PhotoUpload images={photos} onChange={setPhotos} maxPhotos={20} />
             </div>
 
             {/* Contact */}
