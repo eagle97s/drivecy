@@ -74,14 +74,19 @@ export async function POST(req: NextRequest) {
                 text: `You are a car identification expert. Analyze this car photo and provide the following information in JSON format ONLY (no other text):
 
 {
-  "make": "manufacturer name (e.g. Toyota, BMW, Mercedes-Benz)",
-  "model": "model name (e.g. Corolla, 3 Series, C-Class)",
-  "year_estimate": "estimated year or year range (e.g. 2020 or 2018-2021)",
-  "color": "main body color (e.g. White, Black, Silver, Blue, Red)",
-  "body_type": "one of: Sedan, Hatchback, SUV, Coupe, Convertible, Van, Pickup, Wagon",
+  "make": "manufacturer name — MUST be one of: Toyota, Mercedes-Benz, BMW, Audi, Volkswagen, Honda, Nissan, Hyundai, Kia, Ford, Mazda, Peugeot, Renault, Volvo, Skoda, SEAT, Fiat, Porsche, Land Rover, Jeep, Lexus, Mitsubishi, Suzuki, Citroën, Opel, Tesla, Mini, Alfa Romeo, Dacia, Cupra",
+  "model": "specific model name (e.g. 3 Series, Corolla, C-Class, Golf, Civic)",
+  "year_estimate": "best single year estimate as a number (e.g. 2020), not a range",
+  "color": "MUST be one of: White, Black, Silver, Grey, Blue, Red, Green, Brown, Beige, Orange",
+  "body_type": "MUST be one of: Sedan, Hatchback, SUV, Coupe, Convertible, Van, Pickup, Wagon",
+  "fuel_type": "MUST be one of: Petrol, Diesel, Hybrid, Electric, LPG — guess based on car model/year if not visible",
+  "transmission": "MUST be one of: Automatic, Manual — guess based on car model/year",
+  "engine_size": "estimated engine size (e.g. 1.6L, 2.0L, 3.0L) or N/A for electric",
+  "horsepower": "estimated horsepower as a number",
+  "mileage_estimate": "if dashboard/odometer visible, read exact value. Otherwise estimate based on year (avg 15000km/year in Cyprus). Return as number in KM only.",
   "confidence": "high, medium, or low",
-  "dashboard_reading": "if dashboard/odometer is visible, read the km/miles value and specify unit (km or miles). If showing miles, also provide the km conversion. If not visible, set to null",
-  "notes": "any additional observations (damage, modifications, interior details, if odometer appears tampered)"
+  "dashboard_reading": "if dashboard/odometer is visible, read the km/miles value and specify unit. If miles, also provide km conversion. If not visible, set to null",
+  "notes": "any additional observations"
 }
 
 Important rules:
