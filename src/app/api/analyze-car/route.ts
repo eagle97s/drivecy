@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-haiku-4-5-20250514",
+        model: "claude-sonnet-4-20250514",
         max_tokens: 1024,
         messages: [
           {
@@ -99,8 +99,8 @@ Important rules:
 
     if (!response.ok) {
       const err = await response.text();
-      console.error("Anthropic API error:", err);
-      return NextResponse.json({ error: "AI analysis failed" }, { status: 500 });
+      console.error("Anthropic API error:", response.status, err);
+      return NextResponse.json({ error: "AI analysis failed", detail: `API returned ${response.status}` }, { status: 500 });
     }
 
     const data = await response.json();
