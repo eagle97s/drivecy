@@ -1,11 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// Simple in-memory rate limiter
+const rateLimit = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT = 10; // max requests per window
+const RATE_WINDOW = 60 * 60 * 1000; // 1 hour
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimit.get(ip);
+  if (!entry || now > entry.resetAt) {
+    rateLimit.set(ip, { count: 1, resetAt: now + RATE_WINDOW });
+    return true;
+  }
+  if (entry.count >= RATE_LIMIT) return false;
+  entry.count++;
+  return true;
+}
+
 export async function POST(req: NextRequest) {
   try {
+    // Rate limiting
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0] || "unknown";
+    if (!checkRateLimit(ip)) {
+      return NextResponse.json({ error: "Too many requests. Try again later." }, { status: 429 });
+    }
+
     const { imageUrl } = await req.json();
     
     if (!imageUrl) {
       return NextResponse.json({ error: "No image URL provided" }, { status: 400 });
+    }
+
+    // Validate URL is from our Supabase storage
+    if (!imageUrl.includes("supabase.co/storage")) {
+      return NextResponse.json({ error: "Invalid image source" }, { status: 400 });
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -27,7 +55,7 @@ export async function POST(req: NextRequest) {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-haiku-4-5-20250514",
         max_tokens: 1024,
         messages: [
           {
