@@ -4,7 +4,8 @@ import { carMakes, fuelTypes, transmissions, bodyTypes, colors, cities } from "@
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
-import { Camera, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { PhotoUpload } from "@/components/photo-upload";
 import { supabase } from "@/lib/supabase";
 import { useI18n } from "@/i18n/context";
 import { useAuth } from "@/hooks/use-auth";
@@ -26,6 +27,7 @@ export default function SellPage() {
   const [sellerName, setSellerName] = useState("");
   const [sellerPhone, setSellerPhone] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [photos, setPhotos] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -56,7 +58,7 @@ export default function SellPage() {
       seller_name: sellerName,
       seller_phone: sellerPhone,
       features: [],
-      images: [`https://picsum.photos/seed/${Date.now()}/800/600`],
+      images: photos.length > 0 ? photos : [`https://picsum.photos/seed/${Date.now()}/800/600`],
       user_id: user?.id || null,
       status: "active",
     });
@@ -198,11 +200,7 @@ export default function SellPage() {
             {/* Photos */}
             <div className="rounded-xl border border-border bg-card p-6">
               <h2 className="font-bold text-lg text-foreground mb-5">📸 {t("sell.photos")}</h2>
-              <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary transition-colors cursor-pointer">
-                <Camera className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
-                <p className="text-foreground font-medium">{t("sell.uploadPhotos")}</p>
-                <p className="text-muted-foreground text-sm mt-1">{t("sell.uploadLimit")}</p>
-              </div>
+              <PhotoUpload images={photos} onChange={setPhotos} maxPhotos={20} />
             </div>
 
             {/* Contact */}
