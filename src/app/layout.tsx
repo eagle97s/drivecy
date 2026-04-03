@@ -3,7 +3,7 @@ import { Geist } from "next/font/google";
 import "./globals.css";
 import { I18nProvider } from "@/i18n/context";
 
-const geist = Geist({ subsets: ["latin", "greek", "cyrillic"] });
+const geist = Geist({ subsets: ["latin", "cyrillic", "latin-ext"] });
 
 export const metadata: Metadata = {
   title: "DriveCY — Buy & Sell Cars in Cyprus",
