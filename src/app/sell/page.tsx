@@ -6,6 +6,7 @@ import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { PhotoUpload } from "@/components/photo-upload";
+import { ListingReview } from "@/components/listing-review";
 import { supabase } from "@/lib/supabase";
 import { useI18n } from "@/i18n/context";
 import { useAuth } from "@/hooks/use-auth";
@@ -30,6 +31,18 @@ export default function SellPage() {
   const [photos, setPhotos] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showReview, setShowReview] = useState(false);
+
+  const handleCorrections = (corrections: Record<string, string>) => {
+    if (corrections.make) setMake(corrections.make);
+    if (corrections.model) setModel(corrections.model);
+    if (corrections.year) setYear(corrections.year);
+    if (corrections.color) setColor(corrections.color);
+    if (corrections.body_type) setBodyType(corrections.body_type);
+    if (corrections.mileage) setMileage(corrections.mileage);
+    if (corrections.price) setPrice(corrections.price);
+    if (corrections.description) setDescription(corrections.description);
+  };
 
   const models = make ? carMakes[make] || [] : [];
 
@@ -251,13 +264,70 @@ export default function SellPage() {
               </div>
             </div>
 
-            <Button type="submit" size="lg" className="w-full text-lg py-6" disabled={loading}>
-              {loading ? (
-                <><Loader2 className="h-5 w-5 animate-spin mr-2" /> Submitting...</>
-              ) : (
-                t("sell.publish")
-              )}
-            </Button>
+            {/* AI Review Step */}
+            {!showReview ? (
+              <Button
+                type="button"
+                size="lg"
+                className="w-full text-lg py-6"
+                onClick={() => {
+                  // Basic validation before review
+                  if (!make || !model || !year || !price || !mileage || !city || !sellerName || !sellerPhone || !fuelType || !transmission || !bodyType) {
+                    setError("Please fill in all required fields before reviewing.");
+                    return;
+                  }
+                  setError("");
+                  setShowReview(true);
+                }}
+              >
+                🤖 Review & Publish
+              </Button>
+            ) : (
+              <>
+                <ListingReview
+                  listing={{
+                    title: `${year} ${make} ${model}`,
+                    make,
+                    model,
+                    year,
+                    price,
+                    mileage,
+                    fuelType,
+                    transmission,
+                    bodyType,
+                    color,
+                    city,
+                    description,
+                    images: photos,
+                  }}
+                  onCorrections={handleCorrections}
+                  onApprove={() => {
+                    // Trigger the actual form submit
+                    const form = document.querySelector("form");
+                    if (form) {
+                      form.requestSubmit();
+                    }
+                  }}
+                />
+
+                {loading && (
+                  <div className="text-center py-4">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary mx-auto" />
+                    <p className="text-sm text-muted-foreground mt-2">Publishing your listing...</p>
+                  </div>
+                )}
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => setShowReview(false)}
+                >
+                  ← Back to edit
+                </Button>
+              </>
+            )}
           </form>
         </div>
       </main>
