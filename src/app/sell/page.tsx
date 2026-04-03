@@ -48,71 +48,50 @@ export default function SellPage() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleAiAnalysis = (analysis: any) => {
+    // Only fill what AI can ACTUALLY see — make, model, color, body type
+    
     // Make — fuzzy match
-    if (analysis.make) {
+    if (analysis.make && analysis.make !== "unknown") {
       const allMakes = Object.keys(carMakes);
-      const exactMatch = allMakes.find(m => m.toLowerCase() === analysis.make.toLowerCase());
-      const partialMatch = allMakes.find(m => m.toLowerCase().includes(analysis.make.toLowerCase()) || analysis.make.toLowerCase().includes(m.toLowerCase()));
-      const matchedMake = exactMatch || partialMatch;
-      if (matchedMake) {
-        setMake(matchedMake);
-        // Model — fuzzy match within the make
-        if (analysis.model) {
-          const makeModels = carMakes[matchedMake] || [];
-          const exactModel = makeModels.find(m => m.toLowerCase() === analysis.model.toLowerCase());
-          const partialModel = makeModels.find(m => m.toLowerCase().includes(analysis.model.toLowerCase()) || analysis.model.toLowerCase().includes(m.toLowerCase()));
-          if (exactModel || partialModel) setModel(exactModel || partialModel || "");
+      const match = allMakes.find(m => m.toLowerCase() === analysis.make.toLowerCase()) 
+        || allMakes.find(m => m.toLowerCase().includes(analysis.make.toLowerCase()) || analysis.make.toLowerCase().includes(m.toLowerCase()));
+      if (match) {
+        setMake(match);
+        // Model — fuzzy match within make
+        if (analysis.model && analysis.model !== "unknown") {
+          const models = carMakes[match] || [];
+          const modelMatch = models.find(m => m.toLowerCase() === analysis.model.toLowerCase())
+            || models.find(m => analysis.model.toLowerCase().includes(m.toLowerCase()) || m.toLowerCase().includes(analysis.model.toLowerCase()));
+          if (modelMatch) setModel(modelMatch);
         }
       }
     }
 
-    // Year
-    if (analysis.year_estimate) {
-      const yearStr = String(analysis.year_estimate);
-      const yearMatch = yearStr.match(/\d{4}/);
-      if (yearMatch) setYear(yearMatch[0]);
+    // Color — reliable from photos
+    if (analysis.color && analysis.color !== "unknown") {
+      const match = colors.find(c => c.toLowerCase() === analysis.color.toLowerCase());
+      if (match) setColor(match);
     }
 
-    // Color — fuzzy match
-    if (analysis.color) {
-      const matched = colors.find(c => c.toLowerCase() === analysis.color.toLowerCase());
-      const partial = colors.find(c => analysis.color.toLowerCase().includes(c.toLowerCase()));
-      if (matched || partial) setColor(matched || partial || "");
+    // Body type — reliable from photos
+    if (analysis.body_type && analysis.body_type !== "unknown") {
+      const match = bodyTypes.find(b => b.toLowerCase() === analysis.body_type.toLowerCase());
+      if (match) setBodyType(match);
     }
 
-    // Body type — fuzzy match
-    if (analysis.body_type) {
-      const matched = bodyTypes.find(b => b.toLowerCase() === analysis.body_type.toLowerCase());
-      if (matched) setBodyType(matched);
-    }
-
-    // Fuel type
-    if (analysis.fuel_type) {
-      const matched = fuelTypes.find(f => f.toLowerCase() === analysis.fuel_type.toLowerCase());
-      if (matched) setFuelType(matched);
-    }
-
-    // Transmission
-    if (analysis.transmission) {
-      const matched = transmissions.find(t => t.toLowerCase() === analysis.transmission.toLowerCase());
-      if (matched) setTransmission(matched);
-    }
-
-    // Mileage — from odometer reading or estimate
-    if (analysis.mileage_estimate) {
-      const km = parseInt(String(analysis.mileage_estimate).replace(/[^0-9]/g, ""));
-      if (km > 0) setMileage(km.toString());
-    } else if (analysis.dashboard_reading) {
+    // Dashboard reading — ONLY if AI actually saw the odometer
+    if (analysis.dashboard_reading && analysis.dashboard_reading !== null) {
       const reading = String(analysis.dashboard_reading).toLowerCase();
       const numMatch = reading.match(/[\d,]+/);
       if (numMatch) {
         let km = parseInt(numMatch[0].replace(/,/g, ""));
-        if (reading.includes("mile") || reading.includes("mph")) {
-          km = Math.round(km * 1.609);
-        }
-        if (km > 0) setMileage(km.toString());
+        if (reading.includes("mile")) km = Math.round(km * 1.609);
+        if (km > 0 && km < 1000000) setMileage(km.toString());
       }
     }
+
+    // DO NOT auto-fill: year, fuel type, transmission, mileage (unless dashboard visible)
+    // These require user input — AI can't reliably guess them from exterior photos
   };
 
   const inputClass = "w-full rounded-lg border border-border bg-input px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring";

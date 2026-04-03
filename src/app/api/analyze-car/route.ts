@@ -75,25 +75,21 @@ export async function POST(req: NextRequest) {
 
 {
   "make": "manufacturer name — MUST be one of: Toyota, Mercedes-Benz, BMW, Audi, Volkswagen, Honda, Nissan, Hyundai, Kia, Ford, Mazda, Peugeot, Renault, Volvo, Skoda, SEAT, Fiat, Porsche, Land Rover, Jeep, Lexus, Mitsubishi, Suzuki, Citroën, Opel, Tesla, Mini, Alfa Romeo, Dacia, Cupra",
-  "model": "specific model name (e.g. 3 Series, Corolla, C-Class, Golf, Civic)",
-  "year_estimate": "best single year estimate as a number (e.g. 2020), not a range",
+  "model": "specific model name (e.g. 3 Series, Corolla, C-Class, Golf, Civic). Look for badges/emblems on the car.",
   "color": "MUST be one of: White, Black, Silver, Grey, Blue, Red, Green, Brown, Beige, Orange",
   "body_type": "MUST be one of: Sedan, Hatchback, SUV, Coupe, Convertible, Van, Pickup, Wagon",
-  "fuel_type": "MUST be one of: Petrol, Diesel, Hybrid, Electric, LPG — guess based on car model/year if not visible",
-  "transmission": "MUST be one of: Automatic, Manual — guess based on car model/year",
-  "engine_size": "estimated engine size (e.g. 1.6L, 2.0L, 3.0L) or N/A for electric",
-  "horsepower": "estimated horsepower as a number",
-  "mileage_estimate": "if dashboard/odometer visible, read exact value. Otherwise estimate based on year (avg 15000km/year in Cyprus). Return as number in KM only.",
   "confidence": "high, medium, or low",
-  "dashboard_reading": "if dashboard/odometer is visible, read the km/miles value and specify unit. If miles, also provide km conversion. If not visible, set to null",
-  "notes": "any additional observations"
+  "dashboard_reading": "ONLY if dashboard/odometer is clearly visible in the photo, read the exact value and unit (km or miles). If NOT visible, set to null. NEVER guess mileage.",
+  "notes": "any additional observations (badges spotted, generation/facelift details, visible damage)"
 }
 
-Important rules:
-- If you see a dashboard/speedometer: check if it shows km/h or mph. Most cars in Cyprus use km/h.
-- If you see an odometer reading, report the exact number and whether it's in km or miles.
-- If odometer shows miles (common in UK-imported cars in Cyprus), convert to km (multiply by 1.609).
-- If you can't identify something with confidence, say "unknown" rather than guessing.
+CRITICAL RULES:
+- ONLY fill what you can ACTUALLY SEE in the photo. Do NOT guess year, mileage, fuel type, or transmission.
+- DO NOT estimate mileage from year. ONLY report mileage if you see a dashboard/odometer in the photo.
+- DO NOT guess the year. Only suggest a year if you can clearly identify the generation/facelift from design elements.
+- Look for badges, emblems, and model numbers on the car (e.g. "C220", "320d", "1.6 TDI").
+- If you see "CDI", "TDI", "d", "diesel" badge → note it in notes but don't set fuel_type.
+- If you can't identify something, set it to null — NEVER guess.
 - Return ONLY valid JSON, no markdown, no explanation.`
               }
             ],
