@@ -208,10 +208,16 @@ export default function CarDetailPage() {
                     {showPhone ? car.sellerPhone : "Show Phone Number"}
                   </Button>
 
-                  <Button variant="outline" className="w-full gap-2 border-green-700 text-green-400 hover:bg-green-900/20">
-                    <MessageCircle className="h-4 w-4" />
-                    WhatsApp
-                  </Button>
+                  <a
+                    href={`https://wa.me/${car.sellerPhone.replace(/[^0-9+]/g, "").replace("+", "")}?text=${encodeURIComponent(`Hi, I'm interested in your ${car.title} listed on DriveCY for €${car.price.toLocaleString()}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Button variant="outline" className="w-full gap-2 border-green-700 text-green-400 hover:bg-green-900/20">
+                      <MessageCircle className="h-4 w-4" />
+                      WhatsApp
+                    </Button>
+                  </a>
                 </div>
 
                 {/* Safety tip */}

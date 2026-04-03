@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Camera, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useI18n } from "@/i18n/context";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function SellPage() {
   const { t } = useI18n();
+  const { user } = useAuth();
   const [make, setMake] = useState("");
   const [model, setModel] = useState("");
   const [year, setYear] = useState("");
@@ -55,6 +57,7 @@ export default function SellPage() {
       seller_phone: sellerPhone,
       features: [],
       images: [`https://picsum.photos/seed/${Date.now()}/800/600`],
+      user_id: user?.id || null,
       status: "active",
     });
 
