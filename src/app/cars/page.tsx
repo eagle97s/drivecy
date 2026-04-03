@@ -1,7 +1,8 @@
 "use client";
 import { useState, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { listings, carMakes, fuelTypes, transmissions, bodyTypes, cities } from "@/data/cars";
+import { carMakes, fuelTypes, transmissions, bodyTypes, cities } from "@/data/cars";
+import { useListings } from "@/hooks/use-listings";
 import { CarCard } from "@/components/car-card";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
@@ -10,6 +11,7 @@ import { SlidersHorizontal, X } from "lucide-react";
 
 function CarsContent() {
   const searchParams = useSearchParams();
+  const { listings } = useListings();
 
   const [make, setMake] = useState(searchParams.get("make") || "");
   const [model, setModel] = useState(searchParams.get("model") || "");

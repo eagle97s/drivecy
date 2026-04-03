@@ -3,7 +3,8 @@ import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { listings } from "@/data/cars";
+import { listings as seedListings } from "@/data/cars";
+import { useListings } from "@/hooks/use-listings";
 import { CarCard } from "@/components/car-card";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
@@ -12,6 +13,7 @@ import { Phone, MessageCircle, ChevronLeft, ChevronRight, Heart, Share2, Fuel, G
 
 export default function CarDetailPage() {
   const { id } = useParams();
+  const { listings } = useListings();
   const car = listings.find(c => c.id === id);
   const [selectedImage, setSelectedImage] = useState(0);
   const [showPhone, setShowPhone] = useState(false);

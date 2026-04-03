@@ -4,11 +4,12 @@ import { CarCard } from "./car-card";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
-import { listings } from "@/data/cars";
+import { useListings } from "@/hooks/use-listings";
 import { useI18n } from "@/i18n/context";
 
 export function CarGrid() {
   const { t } = useI18n();
+  const { listings } = useListings();
   const featured = listings.slice(0, 6);
 
   return (
