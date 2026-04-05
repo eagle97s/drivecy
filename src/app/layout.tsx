@@ -8,6 +8,13 @@ const geist = Geist({ subsets: ["latin", "cyrillic", "latin-ext"] });
 export const metadata: Metadata = {
   title: "DriveCY — Buy & Sell Cars in Cyprus",
   description: "Cyprus's modern marketplace for buying and selling vehicles. Fast, clean, and easy to use.",
+  manifest: "/manifest.json",
+  themeColor: "#1a1a1a",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "DriveCY",
+  },
 };
 
 export default function RootLayout({
