@@ -59,9 +59,17 @@ export default function SellPage() {
         setMake(match);
         // Model — fuzzy match within make
         if (analysis.model && analysis.model !== "unknown") {
-          const models = carMakes[match] || [];
-          const modelMatch = models.find(m => m.toLowerCase() === analysis.model.toLowerCase())
-            || models.find(m => analysis.model.toLowerCase().includes(m.toLowerCase()) || m.toLowerCase().includes(analysis.model.toLowerCase()));
+          const modelsList = carMakes[match] || [];
+          const normalize = (s: string) => s.toLowerCase().replace(/[-\s]/g, "");
+          const aiModel = normalize(analysis.model);
+          const modelMatch = modelsList.find(m => normalize(m) === aiModel)
+            || modelsList.find(m => aiModel.includes(normalize(m)) || normalize(m).includes(aiModel))
+            || modelsList.find(m => {
+              // Handle cases like AI says "ix 20" vs list has "ix20"
+              const mNorm = normalize(m);
+              return mNorm.replace(/\d/g, "") === aiModel.replace(/\d/g, "") && 
+                     mNorm.replace(/\D/g, "") === aiModel.replace(/\D/g, "");
+            });
           if (modelMatch) setModel(modelMatch);
         }
       }
@@ -90,8 +98,20 @@ export default function SellPage() {
       }
     }
 
-    // DO NOT auto-fill: year, fuel type, transmission, mileage (unless dashboard visible)
-    // These require user input — AI can't reliably guess them from exterior photos
+    // Transmission — if AI can see the gear stick in interior photos
+    if (analysis.transmission && analysis.transmission !== null && analysis.transmission !== "unknown") {
+      const match = transmissions.find(t => t.toLowerCase() === analysis.transmission.toLowerCase());
+      if (match) setTransmission(match);
+    }
+
+    // Fuel type — only if AI spotted a badge (CDI, TDI, electric, etc.)
+    if (analysis.fuel_type && analysis.fuel_type !== null && analysis.fuel_type !== "unknown") {
+      const match = fuelTypes.find(f => f.toLowerCase() === analysis.fuel_type.toLowerCase());
+      if (match) setFuelType(match);
+    }
+
+    // DO NOT auto-fill: year, mileage (unless dashboard visible)
+    // Year requires user input — AI can't reliably guess from photos
   };
 
   const inputClass = "w-full rounded-lg border border-border bg-input px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring";

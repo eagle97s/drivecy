@@ -11,6 +11,8 @@ interface CarAnalysis {
   year_estimate?: string;
   color?: string;
   body_type?: string;
+  transmission?: string | null;
+  fuel_type?: string | null;
   confidence?: string;
   dashboard_reading?: string | null;
   notes?: string;
@@ -60,20 +62,21 @@ export function PhotoUpload({ images, onChange, onAnalysis, maxPhotos = 20 }: Ph
     setUploading(false);
     if (fileRef.current) fileRef.current.value = "";
 
-    // Auto-analyze first photo if it's the first upload
+    // Auto-analyze all photos if it's the first upload
     if (images.length === 0 && newImages.length > 0 && onAnalysis) {
-      analyzePhoto(newImages[0]);
+      analyzePhoto(newImages[0], allImages);
     }
   };
 
-  const analyzePhoto = async (url: string) => {
+  const analyzePhoto = async (url: string, allUrls?: string[]) => {
     setAnalyzing(true);
     setAnalysisResult(null);
     try {
+      // Send all images for comprehensive analysis
       const res = await fetch("/api/analyze-car", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageUrl: url }),
+        body: JSON.stringify({ imageUrls: allUrls || [url] }),
       });
       if (res.ok) {
         const data: CarAnalysis = await res.json();
@@ -145,6 +148,8 @@ export function PhotoUpload({ images, onChange, onAnalysis, maxPhotos = 20 }: Ph
             {analysisResult.year_estimate && <div><span className="text-muted-foreground">Year:</span> <span className="text-foreground font-medium">{analysisResult.year_estimate}</span></div>}
             {analysisResult.color && <div><span className="text-muted-foreground">Color:</span> <span className="text-foreground font-medium">{analysisResult.color}</span></div>}
             {analysisResult.body_type && <div><span className="text-muted-foreground">Body:</span> <span className="text-foreground font-medium">{analysisResult.body_type}</span></div>}
+            {analysisResult.transmission && <div><span className="text-muted-foreground">Transmission:</span> <span className="text-foreground font-medium">{analysisResult.transmission}</span></div>}
+            {analysisResult.fuel_type && <div><span className="text-muted-foreground">Fuel:</span> <span className="text-foreground font-medium">{analysisResult.fuel_type}</span></div>}
             {analysisResult.dashboard_reading && <div className="col-span-2"><span className="text-muted-foreground">Odometer:</span> <span className="text-foreground font-medium">{analysisResult.dashboard_reading}</span></div>}
           </div>
           {analysisResult.notes && (
@@ -162,7 +167,7 @@ export function PhotoUpload({ images, onChange, onAnalysis, maxPhotos = 20 }: Ph
             variant="outline"
             size="sm"
             className="gap-2"
-            onClick={() => analyzePhoto(images[0])}
+            onClick={() => analyzePhoto(images[0], images)}
           >
             <Sparkles className="h-4 w-4" />
             {analysisResult ? "Re-analyze with AI" : "Analyze with AI"}

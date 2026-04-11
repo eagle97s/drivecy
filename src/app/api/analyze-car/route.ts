@@ -25,15 +25,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Too many requests. Try again later." }, { status: 429 });
     }
 
-    const { imageUrl } = await req.json();
+    const { imageUrl, imageUrls } = await req.json();
     
-    if (!imageUrl) {
-      return NextResponse.json({ error: "No image URL provided" }, { status: 400 });
+    // Support single image (legacy) or multiple images
+    const urls: string[] = imageUrls || (imageUrl ? [imageUrl] : []);
+    
+    if (urls.length === 0) {
+      return NextResponse.json({ error: "No image URL(s) provided" }, { status: 400 });
     }
 
-    // Validate URL is from our Supabase storage
-    if (!imageUrl.includes("supabase.co/storage")) {
-      return NextResponse.json({ error: "Invalid image source" }, { status: 400 });
+    // Validate all URLs are from our Supabase storage
+    for (const url of urls) {
+      if (!url.includes("supabase.co/storage")) {
+        return NextResponse.json({ error: "Invalid image source" }, { status: 400 });
+      }
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -41,11 +46,33 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "AI service not configured" }, { status: 500 });
     }
 
-    // Fetch image and convert to base64
-    const imageResponse = await fetch(imageUrl);
-    const imageBuffer = await imageResponse.arrayBuffer();
-    const base64 = Buffer.from(imageBuffer).toString("base64");
-    const mediaType = imageResponse.headers.get("content-type") || "image/jpeg";
+    // Fetch all images and convert to base64 (max 6 to stay within limits)
+    const imagesToAnalyze = urls.slice(0, 6);
+    const imageContents = [];
+    
+    for (const url of imagesToAnalyze) {
+      try {
+        const imageResponse = await fetch(url);
+        const imageBuffer = await imageResponse.arrayBuffer();
+        const base64 = Buffer.from(imageBuffer).toString("base64");
+        const mediaType = imageResponse.headers.get("content-type") || "image/jpeg";
+        
+        imageContents.push({
+          type: "image" as const,
+          source: {
+            type: "base64" as const,
+            media_type: mediaType,
+            data: base64,
+          },
+        });
+      } catch (e) {
+        console.error("Failed to fetch image:", url, e);
+      }
+    }
+
+    if (imageContents.length === 0) {
+      return NextResponse.json({ error: "Failed to fetch any images" }, { status: 500 });
+    }
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -61,36 +88,32 @@ export async function POST(req: NextRequest) {
           {
             role: "user",
             content: [
-              {
-                type: "image",
-                source: {
-                  type: "base64",
-                  media_type: mediaType,
-                  data: base64,
-                },
-              },
+              ...imageContents,
               {
                 type: "text",
-                text: `You are a car identification expert. Analyze this car photo and provide the following information in JSON format ONLY (no other text):
+                text: `You are a car identification expert. You have ${imageContents.length} photo(s) of the same car. Analyze ALL photos together — exterior shots for make/model/color/body, interior shots for transmission type (look at gear stick/shifter), dashboard for odometer reading.
+
+Return ONLY valid JSON (no markdown, no explanation):
 
 {
   "make": "manufacturer name — MUST be one of: Toyota, Mercedes-Benz, BMW, Audi, Volkswagen, Honda, Nissan, Hyundai, Kia, Ford, Mazda, Peugeot, Renault, Volvo, Skoda, SEAT, Fiat, Porsche, Land Rover, Jeep, Lexus, Mitsubishi, Suzuki, Citroën, Opel, Tesla, Mini, Alfa Romeo, Dacia, Cupra",
-  "model": "specific model name (e.g. 3 Series, Corolla, C-Class, Golf, Civic). Look for badges/emblems on the car.",
+  "model": "specific model name (e.g. 3 Series, Corolla, ix20, Golf). Look for badges/emblems on the car.",
   "color": "MUST be one of: White, Black, Silver, Grey, Blue, Red, Green, Brown, Beige, Orange",
   "body_type": "MUST be one of: Sedan, Hatchback, SUV, Coupe, Convertible, Van, Pickup, Wagon",
+  "transmission": "ONLY if you can see the gear stick/shifter in an interior photo: Manual or Automatic. If not visible, set to null.",
+  "fuel_type": "ONLY if you see a badge like CDI, TDI, HDI, diesel, hybrid, electric, or EV charging port: Petrol, Diesel, Hybrid, Electric, or LPG. If not visible, set to null.",
   "confidence": "high, medium, or low",
-  "dashboard_reading": "ONLY if dashboard/odometer is clearly visible in the photo, read the exact value and unit (km or miles). If NOT visible, set to null. NEVER guess mileage.",
-  "notes": "any additional observations (badges spotted, generation/facelift details, visible damage)"
+  "dashboard_reading": "ONLY if dashboard/odometer is clearly visible, read the exact km or miles value. If NOT visible, set to null.",
+  "notes": "badges spotted, generation/facelift clues, anything useful for the seller"
 }
 
-CRITICAL RULES:
-- ONLY fill what you can ACTUALLY SEE in the photo. Do NOT guess year, mileage, fuel type, or transmission.
-- DO NOT estimate mileage from year. ONLY report mileage if you see a dashboard/odometer in the photo.
-- DO NOT guess the year. Only suggest a year if you can clearly identify the generation/facelift from design elements.
-- Look for badges, emblems, and model numbers on the car (e.g. "C220", "320d", "1.6 TDI").
-- If you see "CDI", "TDI", "d", "diesel" badge → note it in notes but don't set fuel_type.
-- If you can't identify something, set it to null — NEVER guess.
-- Return ONLY valid JSON, no markdown, no explanation.`
+RULES:
+- Analyze ALL photos — don't just look at the first one.
+- For transmission: look at gear stick photos. Automatic = no H-pattern/numbers, has P/R/N/D or tiptronic. Manual = H-pattern with numbered gears, 3 pedals.
+- DO NOT guess year or mileage from appearance. Only report mileage if you see the odometer.
+- Look for model badges/emblems carefully (e.g. "ix20" not "i20", "320d" not "3 Series").
+- If you can't identify something with confidence, set it to null.
+- Return ONLY valid JSON.`
               }
             ],
           },

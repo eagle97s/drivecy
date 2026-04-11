@@ -30,7 +30,7 @@ export const carMakes: Record<string, string[]> = {
   "Volkswagen": ["Golf", "Polo", "Passat", "Tiguan", "T-Roc", "ID.4", "Arteon", "Touareg", "Up!", "Jetta"],
   "Honda": ["Civic", "Jazz", "CR-V", "HR-V", "Accord", "City", "Fit"],
   "Nissan": ["Qashqai", "Juke", "Micra", "X-Trail", "Leaf", "370Z", "Navara"],
-  "Hyundai": ["i10", "i20", "i30", "Tucson", "Kona", "Santa Fe", "Ioniq 5", "Ioniq 6"],
+  "Hyundai": ["i10", "i20", "i30", "i40", "ix20", "ix35", "Tucson", "Kona", "Santa Fe", "Ioniq 5", "Ioniq 6", "Elantra", "Accent", "Getz", "Bayon"],
   "Kia": ["Picanto", "Rio", "Ceed", "Sportage", "Sorento", "EV6", "Stinger", "Niro"],
   "Ford": ["Fiesta", "Focus", "Puma", "Kuga", "Mustang", "Ranger", "Explorer"],
   "Mazda": ["Mazda2", "Mazda3", "Mazda6", "CX-3", "CX-5", "CX-30", "MX-5"],
