@@ -182,7 +182,7 @@ export default function SellPage() {
           </div>
 
           {error && (
-            <div className="mb-6 rounded-xl border border-red-800/50 bg-red-900/10 p-4 text-red-400 text-sm">
+            <div id="form-error" className="mb-6 rounded-xl border border-red-800/50 bg-red-900/10 p-4 text-red-400 text-sm">
               {error}
             </div>
           )}
@@ -308,14 +308,18 @@ export default function SellPage() {
                 onClick={() => {
                   // Basic validation before review
                   if (!make || !model || !year || !price || !mileage || !city || !sellerName || !sellerPhone || !fuelType || !transmission || !bodyType) {
-                    setError("Please fill in all required fields before reviewing.");
+                    setError(t("sell.fillRequired"));
+                    // Scroll to the error message
+                    setTimeout(() => {
+                      document.getElementById("form-error")?.scrollIntoView({ behavior: "smooth", block: "center" });
+                    }, 100);
                     return;
                   }
                   setError("");
                   setShowReview(true);
                 }}
               >
-                🤖 Review & Publish
+                {t("sell.reviewPublish")}
               </Button>
             ) : (
               <>
@@ -359,7 +363,7 @@ export default function SellPage() {
                   className="w-full"
                   onClick={() => setShowReview(false)}
                 >
-                  ← Back to edit
+                  {t("sell.backToEdit")}
                 </Button>
               </>
             )}
